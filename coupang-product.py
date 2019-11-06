@@ -7,7 +7,7 @@ headers = {
 }
 
 res = requests.get(
-    'https://www.coupang.com/np/campaigns/82/components/194176?page=1',
+    'https://www.coupang.com/np/campaigns/82/components/194176',
     headers=headers)
 
 soup = BeautifulSoup(res.text, 'html.parser')
@@ -15,9 +15,20 @@ soup = BeautifulSoup(res.text, 'html.parser')
 product_list = []
 for li in soup.select('#productList > li'):
     product_list.append([
-        li.select_one('a > dl > dd > div.name').text.strip(),
-        li.select_one('a > dl > dd > div.price-area > div.price-wrap > div.price > em > strong').text,
-        li.select_one('a > dl > dd > div.other-info > div > span.rating-total-count').text
+        li.find('a').find('dl').find('dd')
+            .find('div', {'class': 'name'})
+            .text.strip(),
+        li.find('a').find('dl').find('dd')
+            .find('div', {'class': 'price-area'})
+            .find('div', {'class': 'price-wrap'})
+            .find('div', {'class': 'price'})
+            .find('em').find('strong')
+            .text,
+        li.find('a').find('dl').find('dd')
+            .find('div', {'class': 'other-info'}).find('div')
+            .find('span', {'class': 'rating-total-count'})
+            .text,
+        'https:' + li.find('a').find('dl').find('dt').find('img')['src']
     ])
 
 pprint.pprint(product_list)
