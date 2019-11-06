@@ -1,6 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
 import pprint
+import pandas as pd
+import time
 
 BASE_URL = 'https://www.coupang.com/np/campaigns/82/components/194176'
 HEADERS = {
@@ -8,13 +10,13 @@ HEADERS = {
     }
 
 def get_html_with_page(p_num):
+    time.sleep(1)
     print('scrap ' + str(p_num) + 'page')
     return requests.get(BASE_URL + '?page=' + str(p_num), headers=HEADERS)
 
-def no_product():
-    # print(type(soup.select('#productList')))
-    # if not soup.select('#productList'):
-    #     print('product no more find.. Im out')
+def no_product(soup):
+    if not soup.find(id='productList'):
+        print('product no more find.. Im out')
         return True
 
 def main():
@@ -23,11 +25,11 @@ def main():
         res = get_html_with_page(page_num)
         soup = BeautifulSoup(res.text, 'html.parser')
 
-        if no_product():
+        if no_product(soup):
             break
 
         for li in soup.select('#productList > li'):
-            product_list.append([
+            product = [
                 li.find('a').find('dl').find('dd')
                     .find('div', {'class': 'name'})
                     .text.strip(),
@@ -42,7 +44,9 @@ def main():
                     .find('span', {'class': 'rating-total-count'})
                     .text,
                 'https:' + li.find('a').find('dl').find('dt').find('img')['src']
-            ])
+            ]
+            print(product)
+            product_list.append(product)
             download_and_save_image('https:' + li.find('a').find('dl').find('dt').find('img')['src'])
 
     pprint.pprint(product_list)
@@ -51,7 +55,11 @@ def main():
     save_product_list(product_list)
 
 def save_product_list(list):
-    pass
+    df = pd.DataFrame(list,
+                      columns=['상품명','가격','좋아요','URL'])
+    df.to_excel('coupang.xlsx')
+    df.to_csv('coupang.csv')
+    print('save to excel.. good job..')
 
 
 def download_and_save_image(image_url):
