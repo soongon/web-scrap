@@ -3,14 +3,16 @@ from bs4 import BeautifulSoup
 import pprint
 import pandas as pd
 import time
+import random
 
 BASE_URL = 'https://www.coupang.com/np/campaigns/82/components/194176'
 HEADERS = {
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36'
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36',
+        'Cache-Control': 'no-cache'
     }
 
 def get_html_with_page(p_num):
-    time.sleep(1)
+    time.sleep(random.randrange(1,5))
     print('scrap ' + str(p_num) + 'page')
     return requests.get(BASE_URL + '?page=' + str(p_num), headers=HEADERS)
 
@@ -18,6 +20,7 @@ def no_product(soup):
     if not soup.find(id='productList'):
         print('product no more find.. Im out')
         return True
+
 
 def main():
     product_list = []
