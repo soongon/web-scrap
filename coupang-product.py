@@ -12,23 +12,32 @@ HEADERS = {
     }
 
 def get_html_with_page(p_num):
-    time.sleep(random.randrange(1,5))
+    #time.sleep(random.randrange(1,5))
     print('scrap ' + str(p_num) + 'page')
     return requests.get(BASE_URL + '?page=' + str(p_num), headers=HEADERS)
 
-def no_product(soup):
-    if not soup.find(id='productList'):
-        print('product no more find.. Im out')
-        return True
+
+def get_soup_with_page_num(page_num):
+    res = get_html_with_page(page_num)
+    soup = BeautifulSoup(res.text, 'html.parser')
+
+    if soup.find(id='productList'):
+        return soup
+    else:
+        print('fail to get soup.. retry..')
+        res = get_html_with_page(page_num)
+        soup_retry = BeautifulSoup(res.text, 'html.parser')
+        return soup_retry
 
 
 def main():
     product_list = []
     for page_num in range(1, 100):
-        res = get_html_with_page(page_num)
-        soup = BeautifulSoup(res.text, 'html.parser')
 
-        if no_product(soup):
+        soup = get_soup_with_page_num(page_num)
+
+        if not soup.select('#productList > li'):
+            print('end of page.. exit scrap.')
             break
 
         for li in soup.select('#productList > li'):
@@ -45,17 +54,16 @@ def main():
                 li.find('a').find('dl').find('dd')
                     .find('div', {'class': 'other-info'}).find('div')
                     .find('span', {'class': 'rating-total-count'})
-                    .text,
+                    .string,
                 'https:' + li.find('a').find('dl').find('dt').find('img')['src']
             ]
             print(product)
             product_list.append(product)
             download_and_save_image('https:' + li.find('a').find('dl').find('dt').find('img')['src'])
 
-    pprint.pprint(product_list)
     print(len(product_list))
-
     save_product_list(product_list)
+
 
 def save_product_list(list):
     df = pd.DataFrame(list,
